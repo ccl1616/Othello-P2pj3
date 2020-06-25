@@ -35,7 +35,7 @@ void read_valid_spots(std::ifstream& fin) {
     }
 }
 
-int heuristic(OthelloBoard cur, bool colored){
+int heuristic(OthelloBoard cur){
     int heuristic = 0;
     int bk = 0, wh = 0;
     for(auto i:corners){
@@ -150,30 +150,69 @@ int heuristic(OthelloBoard cur, bool colored){
 
 // black: minimizer, colored
 // white: maximizer, un-colored
-int minmax(OthelloBoard cur, int depth, bool colored){
-    if(depth == 0){
-
+int minmax(Node curnode, int depth, bool colored){
+    if(depth == 0 || false){
+        curnode.heuristic = heuristic(curnode.state);
+        return curnode.heuristic;
     }
-}
+    // create children board into arrays
+    for(auto i:curnode.state.next_valid_spots){
+        OthelloBoard c = curnode.state;
+        c.put_disc( Point(i.x,i.y) );
+        Node n(c);
+        n.x = i.x;
+        n.y = i.y;
+        curnode.children.push_back(n);
+    }
+    // maximizer, white
+    if(!colored){
+        int maxeval = INT16_MIN;
+        for(auto i:curnode.children){
+            int eval = minmax( Node(i),depth-1,true); 
+            maxeval = std::max(maxeval,eval);
+        }
+        curnode.heuristic = maxeval;
+        return maxeval;
+    }
+    // minimizer, black
+    else{
+        int mineval = INT16_MAX;
+        for(auto i:curnode.children){
+            int eval = minmax( Node(i),depth-1,false);
+            mineval = std::min(mineval,eval);
+        }
+        curnode.heuristic = mineval;
+        return mineval;
+    }
+
+} // end function
 
 void write_valid_spot(std::ofstream& fout) {
-    //int n_valid_spots = next_valid_spots.size();
+    int n_valid_spots = next_valid_spots.size();
     srand(time(NULL));
     
     // ===================================
     // find good moves here
     // note that black=1 =colored =minimizer
+    
     Point p;
 
     // starting to build root 
     // first build root state
     OthelloBoard cur(board);
     cur.cur_player = player;
-    Node* root;
-    root->state = cur;
-    
+    cur.next_valid_spots = next_valid_spots;
+    Node root(cur);
+    root.heuristic = minmax(root,10,player==1);
+    for(auto i:root.children){
+        if(i.heuristic == root.heuristic){
+            p.x = i.x;
+            p.y = i.y;
+            break;
+        } 
+    }
     // ===================================
-
+ 
     // Remember to flush the output to ensure the last action is written to file.
     fout << p.x << " " << p.y << std::endl;
     fout.flush();

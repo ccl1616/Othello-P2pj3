@@ -119,10 +119,7 @@ public:
         disc_count[BLACK] = rhs.disc_count[BLACK];
         disc_count[WHITE] = rhs.disc_count[WHITE];
         
-        int j = 0;
-        for(auto i:rhs.next_valid_spots){
-            next_valid_spots[j++] = i;
-        }
+        next_valid_spots = rhs.get_valid_spots();
         done = false;
         winner = -1;
         return *this;
@@ -296,8 +293,10 @@ public:
 
 struct Node{
     OthelloBoard state;
-    std::vector<OthelloBoard> child;
+    std::vector<Node> children;
     int heuristic;
     int depth;
     int alpha, beta;
+    int x,y;
+    Node(OthelloBoard in):state(in){}
 };
