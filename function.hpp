@@ -35,7 +35,7 @@ public:
     static const int SIZE = 8;
     const std::array<Point, 8> directions{{
         Point(-1, -1), Point(-1, 0), Point(-1, 1),
-        Point(0, -1), /*{0, 0}, */Point(0, 1),
+        Point(0, -1), Point(0, 1),
         Point(1, -1), Point(1, 0), Point(1, 1)
     }};
     std::array<std::array<int, SIZE>, SIZE> board;
@@ -106,6 +106,21 @@ private:
 public:
     OthelloBoard() {
         reset();
+    }
+    // copy constructor
+    OthelloBoard(std::array<std::array<int, SIZE>, SIZE> input){
+        disc_count[BLACK] = 0;
+        disc_count[WHITE] = 0;
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                board[i][j] = input[i][j];
+                if(board[i][j] == 1) disc_count[BLACK]++;
+                else if(board[i][j] == 2) disc_count[WHITE]++;
+            }
+        }
+        disc_count[EMPTY] = 8*8-disc_count[BLACK]-disc_count[WHITE];
+        next_valid_spots = get_valid_spots();
+        done = false;
     }
     void reset() {
         for (int i = 0; i < SIZE; i++) {
@@ -255,4 +270,12 @@ public:
         }
         return ss.str();
     }
+};
+
+struct Node{
+    OthelloBoard cur;
+    std::vector<OthelloBoard> child;
+    int id, color;
+    int depth;
+    int alpha, beta;
 };
