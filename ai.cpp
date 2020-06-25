@@ -6,7 +6,12 @@
 #include <ctime>
 
 struct Point {
-    int x, y;
+    int x, y, h;
+    Point() : Point(0, 0) {}
+    Point(float x, float y) : x(x), y(y) ,h(0) {}
+	bool operator==(const Point& rhs) const {
+		return x == rhs.x && y == rhs.y;
+	}
 };
 
 int player;
@@ -26,24 +31,53 @@ void read_board(std::ifstream& fin) {
 void read_valid_spots(std::ifstream& fin) {
     int n_valid_spots;
     fin >> n_valid_spots;
-    int x, y;
+    float x, y;
     for (int i = 0; i < n_valid_spots; i++) {
         fin >> x >> y;
         next_valid_spots.push_back({x, y});
     }
 }
 
+int verify_type(Point p, bool colored)
+{
+    int k = colored ?-1:1;
+    if( p == Point(0,0) || p == Point(0,7) || p == Point(7,0) || p == Point(7,7) )
+        return 2*k;
+    else if( (p.x == 0 || p.x == 7)&&( p.y >= 2 && p.y <= 5 ) )
+        return 1*k;
+    else if( p == Point(0,1) || p == Point(1,0) || p == Point(0,6) || p == Point(1,7)
+            || p == Point(6,0) || p == Point(7,1) || p == Point(7,0) || p == Point(6,7) )
+        return -2*k;
+    else if( p == Point(1,1) || p == Point(1,6) || p == Point(6,1) || p == Point(6,6) )
+        return -1*k;
+    else return 0;
+}
+
+/*
+// black: minimizing, colored
+// white: maximizing, un-colored
+int minmax(Point pos, int depth, bool player){
+    if(depth == 0){
+
+    }
+}*/
+
 void write_valid_spot(std::ofstream& fout) {
     int n_valid_spots = next_valid_spots.size();
     srand(time(NULL));
-    // Choose random spot. (Not random uniform here)
-
+    
     // ===================================
     // find good moves here
-    int index = (rand() % n_valid_spots);
-    Point p = next_valid_spots[index];
+    // i'm black, colored, minimizer
+    int nowmin = INT16_MAX;
+    Point p;
+    for(auto i:next_valid_spots){
+        if( verify_type(i,true) < nowmin ){
+            nowmin = verify_type(i,true);
+            p = i;
+        }
+    }
     // ===================================
-
 
     // Remember to flush the output to ensure the last action is written to file.
     fout << p.x << " " << p.y << std::endl;
