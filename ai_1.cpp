@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <ctime>
 #include "function.hpp"
+using namespace std;
 
 int player;
 const int SIZE = 8;
@@ -14,7 +15,7 @@ std::array<Point, 4> corners{{
         Point(0, 0), Point(0,7), Point(7,0),Point(7,7)
     }
 };
-
+Point ans(-1,-1);
 
 void read_board(std::ifstream& fin) {
     fin >> player;
@@ -35,7 +36,7 @@ void read_valid_spots(std::ifstream& fin) {
     }
 }
 
-int heuristic(OthelloBoard cur){
+int heuristic(OthelloBoard cur,bool maximizer){
     int heuristic = 0;
     int bk = 0, wh = 0;
     for(auto i:corners){
@@ -44,8 +45,11 @@ int heuristic(OthelloBoard cur){
         else if(cur.board[i.x][i.y] == 2) 
             wh ++;
     }
-    heuristic += 100*(wh-bk)/ (bk+wh);
+    if(maximizer)
+        heuristic += 100*(bk-wh)/ (bk+wh+1);
+    else heuristic += -100*(wh-bk)/ (bk+wh+1);
 
+    /*
     // 連線
     bool prev_color = true;
     int consecutive_bk = 0;
@@ -143,43 +147,51 @@ int heuristic(OthelloBoard cur){
     }
     if(consecutive_bk >= 2) heuristic += 50*consecutive_bk*(-1);
     if(consecutive_wh >= 2) heuristic += 50*consecutive_wh;
+    */
 
     return heuristic;
 }
 
 
-// black: minimizer, colored
-// white: maximizer, un-colored
-int minmax(Node curnode, int depth, bool colored){
-    if(depth == 0 || false){
-        curnode.heuristic = heuristic(curnode.state);
+int minimax(OthelloBoard curnode, int depth, bool maximizer){
+    if(depth == 0){
+        // return static evaluation of position
+        curnode.heuristic = heuristic(curnode,maximizer);
         return curnode.heuristic;
     }
-    // create children board into arrays
-    for(auto i:curnode.state.next_valid_spots){
-        OthelloBoard c = curnode.state;
-        c.put_disc( Point(i.x,i.y) );
-        Node n(c);
-        n.x = i.x;
-        n.y = i.y;
-        curnode.children.push_back(n);
-    }
-    // maximizer, white
-    if(!colored){
+    
+    if(maximizer){
         int maxeval = INT16_MIN;
-        for(auto i:curnode.children){
-            int eval = minmax( Node(i),depth-1,true); 
-            maxeval = std::max(maxeval,eval);
+        for(auto i:curnode.next_valid_spots){
+            OthelloBoard next = curnode;
+            if(!next.put_disc(i)){
+                cout << "minimax-maximizer put_disc error\n";
+                return -1;
+            }
+            else{
+                int eval = minimax( next,depth-1,false); 
+                maxeval = max(maxeval,eval);
+                if(maxeval == eval)
+                    ans = i;
+            }
         }
         curnode.heuristic = maxeval;
         return maxeval;
     }
-    // minimizer, black
     else{
         int mineval = INT16_MAX;
-        for(auto i:curnode.children){
-            int eval = minmax( Node(i),depth-1,false);
-            mineval = std::min(mineval,eval);
+        for(auto i:curnode.next_valid_spots){
+            OthelloBoard next = curnode;
+            if(!next.put_disc(i)){
+                cout << "minimax-minimizer put_disc error\n";
+                return -1;
+            }
+            else{
+                int eval = minimax( next,depth-1,true);
+                mineval = min(mineval,eval);
+                if(mineval == eval)
+                    ans = i;
+            }
         }
         curnode.heuristic = mineval;
         return mineval;
@@ -188,28 +200,23 @@ int minmax(Node curnode, int depth, bool colored){
 } // end function
 
 void write_valid_spot(std::ofstream& fout) {
-    int n_valid_spots = next_valid_spots.size();
+    //int n_valid_spots = next_valid_spots.size();
     srand(time(NULL));
-    
+    Point p;
     // ===================================
     // find good moves here
-    // note that black=1 =colored =minimizer
-    
-    Point p;
-
+    // black =1 =colored =maximizer
     // starting to build root 
-    // first build root state
     OthelloBoard cur(board);
     cur.cur_player = player;
     cur.next_valid_spots = next_valid_spots;
-    Node root(cur);
-    root.heuristic = minmax(root,10,player==1);
-    for(auto i:root.children){
-        if(i.heuristic == root.heuristic){
-            p.x = i.x;
-            p.y = i.y;
-            break;
-        } 
+    cur.heuristic = minimax(cur,20,player==1);
+    
+    if(ans.x == -1 && ans.y == -1)
+        cout << "non-use tree search\n";
+    else {
+        p.x = ans.x;
+        p.y = ans.y;
     }
     // ===================================
  

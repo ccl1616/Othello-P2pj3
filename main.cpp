@@ -11,7 +11,7 @@ const std::string file_log = "gamelog.txt";
 const std::string file_state = "state";
 const std::string file_action = "action";
 // Timeout is set to 10 when TA test your code.
-const int timeout = 2;
+const int timeout = 10;
 
 void launch_executable(std::string filename) {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
             if (!(fin >> y)) break;
             p.x = x; p.y = y;
         }
-        std::cout << "output: " << p.x << "," << p.y << std::endl;
+        std::cout << "output: "<< p.x << "," << p.y << std::endl;
         fin.close();
         // Reset action file
         if (remove(file_action.c_str()) != 0)

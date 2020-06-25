@@ -30,9 +30,9 @@ void read_valid_spots(std::ifstream& fin) {
     }
 }
 
-int verify_type(Point p, bool colored)
+int verify_type(Point p, bool maximizer)
 {
-    int k = colored ?-1:1;
+    int k = maximizer ?1:-1;
     if( p == Point(0,0) || p == Point(0,7) || p == Point(7,0) || p == Point(7,7) )
         return 2*k;
     else if( (p.x == 0 || p.x == 7)&&( p.y >= 2 && p.y <= 5 ) )
@@ -51,23 +51,23 @@ void write_valid_spot(std::ofstream& fout) {
     
     // ===================================
     // find good moves here
-    // note that black=1 =colored =minimizer
+    // note that black =1 =colored =maximizer
     int nowmin = INT16_MAX; 
     int nowmax = INT16_MIN;
     bool person = player==1;
     Point p;
     if(person){
         for(auto i:next_valid_spots){
-            if( verify_type(i,person) < nowmin ){
-                nowmin = verify_type(i,person);
+            if( verify_type(i,person) > nowmax ){
+                nowmax = verify_type(i,person);
                 p = i;
             }
         }
     }
     else{
         for(auto i:next_valid_spots){
-            if( verify_type(i,person) > nowmax ){
-                nowmax = verify_type(i,person);
+            if( verify_type(i,person) > nowmin ){
+                nowmin = verify_type(i,person);
                 p = i;
             }
         }

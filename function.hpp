@@ -9,6 +9,7 @@
 struct Point {
     int x, y;
 	Point() : Point(0, 0) {}
+
 	Point(float x, float y) : x(x), y(y) {}
 	bool operator==(const Point& rhs) const {
 		return x == rhs.x && y == rhs.y;
@@ -44,6 +45,8 @@ public:
     int cur_player;
     bool done;
     int winner;
+    int heuristic;
+    bool choosen;
 private:
     int get_next_player(int player) const {
         return 3 - player;
@@ -122,6 +125,8 @@ public:
         next_valid_spots = rhs.get_valid_spots();
         done = false;
         winner = -1;
+        heuristic = rhs.heuristic;
+        choosen = rhs.choosen;
         return *this;
     }// end function
 
@@ -140,7 +145,11 @@ public:
         next_valid_spots = get_valid_spots();
         done = false;
         winner = -1;
+        heuristic = 0;
+        choosen = false;
     }
+
+
     void reset() {
         for (int i = 0; i < SIZE; i++) {
             for (int j = 0; j < SIZE; j++) {
@@ -156,7 +165,10 @@ public:
         next_valid_spots = get_valid_spots();
         done = false;
         winner = -1;
+        heuristic = 0;
+        choosen = false;
     }
+
     // kinnda useless
     void myset(){
         int n;
