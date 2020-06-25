@@ -122,6 +122,7 @@ public:
         done = false;
         winner = -1;
     }
+    // kinnda useless
     void myset(){
         int n;
         std::cin >> n;
@@ -287,7 +288,6 @@ int main(int argc, char** argv) {
     std::cout << "Player Black File: " << player_filename[OthelloBoard::BLACK] << std::endl;
     std::cout << "Player White File: " << player_filename[OthelloBoard::WHITE] << std::endl;
     OthelloBoard game;
-    game.myset();
 
     std::string data;
     data = game.encode_output();
