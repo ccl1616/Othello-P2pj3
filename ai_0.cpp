@@ -63,7 +63,7 @@ int minmax(Point pos, int depth, bool player){
 }*/
 
 void write_valid_spot(std::ofstream& fout) {
-    int n_valid_spots = next_valid_spots.size();
+    //int n_valid_spots = next_valid_spots.size();
     srand(time(NULL));
     
     // ===================================
