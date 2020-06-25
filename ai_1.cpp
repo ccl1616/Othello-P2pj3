@@ -4,15 +4,7 @@
 #include <vector>
 #include <cstdlib>
 #include <ctime>
-
-struct Point {
-    int x, y, h;
-    Point() : Point(0, 0) {}
-    Point(float x, float y) : x(x), y(y) ,h(0) {}
-	bool operator==(const Point& rhs) const {
-		return x == rhs.x && y == rhs.y;
-	}
-};
+#include "function.hpp"
 
 int player;
 const int SIZE = 8;
