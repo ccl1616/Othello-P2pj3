@@ -122,6 +122,33 @@ public:
         done = false;
         winner = -1;
     }
+    void myset(){
+        int n;
+        std::cin >> n;
+        cur_player = n==1 ?BLACK :WHITE;
+        int temp = 0;
+        
+        disc_count[BLACK] = 0;
+        disc_count[WHITE] = 0;
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                std::cin >> temp;
+                if(temp == 0)
+                    board[i][j] = EMPTY;
+                else if(temp == 1){
+                    board[i][j] = BLACK;
+                    disc_count[BLACK] ++;
+                }
+                else if(temp == 2){
+                    board[i][j] = WHITE;
+                    disc_count[WHITE] ++;
+                }
+            }   
+        }
+        disc_count[EMPTY] = 8*8 - disc_count[BLACK] - disc_count[WHITE];
+        next_valid_spots = get_valid_spots();
+    } //end myset function
+
     std::vector<Point> get_valid_spots() const {
         std::vector<Point> valid_spots;
         for (int i = 0; i < SIZE; i++) {
@@ -260,10 +287,13 @@ int main(int argc, char** argv) {
     std::cout << "Player Black File: " << player_filename[OthelloBoard::BLACK] << std::endl;
     std::cout << "Player White File: " << player_filename[OthelloBoard::WHITE] << std::endl;
     OthelloBoard game;
+    game.myset();
+
     std::string data;
     data = game.encode_output();
     std::cout << data;
     log << data;
+
     while (!game.done) {
         // Output current state
         data = game.encode_state();
