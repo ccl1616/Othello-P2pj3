@@ -16,7 +16,7 @@ struct Point {
 
 int player;
 const int SIZE = 8;
-std::array<std::array<int, SIZE>, SIZE> board;
+std::array<std::array<int, SIZE>, SIZE> board; // 此時的棋盤樣貌
 std::vector<Point> next_valid_spots;
 
 void read_board(std::ifstream& fin) {
@@ -52,6 +52,15 @@ int verify_type(Point p, bool colored)
         return -1*k;
     else return 0;
 }
+
+/*
+// black: minimizing, colored
+// white: maximizing, un-colored
+int minmax(Point pos, int depth, bool player){
+    if(depth == 0){
+
+    }
+}*/
 
 void write_valid_spot(std::ofstream& fout) {
     //int n_valid_spots = next_valid_spots.size();
