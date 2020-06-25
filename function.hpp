@@ -107,7 +107,28 @@ public:
     OthelloBoard() {
         reset();
     }
-    // copy constructor
+    // copy assignment
+    OthelloBoard& operator=(const OthelloBoard& rhs){
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                board[i][j] = rhs.board[i][j];
+            }
+        }
+        cur_player = rhs.cur_player;
+        disc_count[EMPTY] = rhs.disc_count[EMPTY];
+        disc_count[BLACK] = rhs.disc_count[BLACK];
+        disc_count[WHITE] = rhs.disc_count[WHITE];
+        
+        int j = 0;
+        for(auto i:rhs.next_valid_spots){
+            next_valid_spots[j++] = i;
+        }
+        done = false;
+        winner = -1;
+        return *this;
+    }// end function
+
+    // construct by input
     OthelloBoard(std::array<std::array<int, SIZE>, SIZE> input){
         disc_count[BLACK] = 0;
         disc_count[WHITE] = 0;
@@ -121,6 +142,7 @@ public:
         disc_count[EMPTY] = 8*8-disc_count[BLACK]-disc_count[WHITE];
         next_valid_spots = get_valid_spots();
         done = false;
+        winner = -1;
     }
     void reset() {
         for (int i = 0; i < SIZE; i++) {
@@ -273,9 +295,9 @@ public:
 };
 
 struct Node{
-    OthelloBoard cur;
+    OthelloBoard state;
     std::vector<OthelloBoard> child;
-    int id, color;
+    int heuristic;
     int depth;
     int alpha, beta;
 };

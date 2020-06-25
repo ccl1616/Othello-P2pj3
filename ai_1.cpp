@@ -10,6 +10,11 @@ int player;
 const int SIZE = 8;
 std::array<std::array<int, SIZE>, SIZE> board; // 此時的棋盤樣貌
 std::vector<Point> next_valid_spots;
+std::array<Point, 4> corners{{
+        Point(0, 0), Point(0,7), Point(7,0),Point(7,7)
+    }
+};
+
 
 void read_board(std::ifstream& fin) {
     fin >> player;
@@ -30,29 +35,126 @@ void read_valid_spots(std::ifstream& fin) {
     }
 }
 
-int verify_type(Point p, bool colored)
-{
-    int k = colored ?-1:1;
-    if( p == Point(0,0) || p == Point(0,7) || p == Point(7,0) || p == Point(7,7) )
-        return 2*k;
-    else if( (p.x == 0 || p.x == 7)&&( p.y >= 2 && p.y <= 5 ) )
-        return 1*k;
-    else if( p == Point(0,1) || p == Point(1,0) || p == Point(0,6) || p == Point(1,7)
-            || p == Point(6,0) || p == Point(7,1) || p == Point(7,0) || p == Point(6,7) )
-        return -2*k;
-    else if( p == Point(1,1) || p == Point(1,6) || p == Point(6,1) || p == Point(6,6) )
-        return -1*k;
-    else return 0;
+int heuristic(OthelloBoard cur, bool colored){
+    int heuristic = 0;
+    int bk = 0, wh = 0;
+    for(auto i:corners){
+        if( cur.board[i.x][i.y] == 1)
+            bk ++;
+        else if(cur.board[i.x][i.y] == 2) 
+            wh ++;
+    }
+    heuristic += 100*(wh-bk)/ (bk+wh);
+
+    // 連線
+    bool prev_color = true;
+    int consecutive_bk = 0;
+    int consecutive_wh = 0;
+    // 可在棋盤邊row上連線 左到右
+    for(int i = 0; i < SIZE; i = i+7){
+        for(int j = 0; j < SIZE; j ++){
+            if(!cur.board[i][0])
+                break;
+            if(consecutive_bk == 0 && consecutive_wh == 0){
+                prev_color = cur.board[i][j]==1 ; 
+                if(prev_color) consecutive_bk++;
+                else consecutive_wh++;
+            }
+            else{
+                if(prev_color && cur.board[i][j]==1)
+                    consecutive_bk ++;
+                else if( !prev_color && cur.board[i][j]==2)
+                    consecutive_wh ++;
+                else break;
+            }
+        }
+    }
+    if(consecutive_bk >= 2) heuristic += 50*consecutive_bk*(-1);
+    if(consecutive_wh >= 2) heuristic += 50*consecutive_wh;
+
+    // 右到左
+    consecutive_bk = 0;
+    consecutive_wh = 0;
+    for(int i = 0; i < SIZE; i = i+7){
+        for(int j = 7; j >= 0; j --){
+            if(!cur.board[i][j])
+                break;
+            if(consecutive_bk == 0 && consecutive_wh == 0){
+                prev_color = cur.board[i][j]==1 ; 
+                if(prev_color) consecutive_bk++;
+                else consecutive_wh++;
+            }
+            else{
+                if(prev_color && cur.board[i][j]==1)
+                    consecutive_bk ++;
+                else if( !prev_color && cur.board[i][j]==2)
+                    consecutive_wh ++;
+                else break;
+            }
+        }
+    }
+    if(consecutive_bk >= 2) heuristic += 50*consecutive_bk*(-1);
+    if(consecutive_wh >= 2) heuristic += 50*consecutive_wh;
+
+    consecutive_bk = 0;
+    consecutive_wh = 0;
+    // 可在棋盤邊col上連線 上到下
+    for(int j = 0; j < SIZE; j = j+7){
+        for(int i = 0; i < SIZE; i ++){
+            if(!cur.board[0][j])
+                break;
+            if(consecutive_bk == 0 && consecutive_wh == 0){
+                prev_color = cur.board[i][j]==1 ; 
+                if(prev_color) consecutive_bk++;
+                else consecutive_wh++;
+            }
+            else{
+                if(prev_color && cur.board[i][j]==1)
+                    consecutive_bk ++;
+                else if( !prev_color && cur.board[i][j]==2)
+                    consecutive_wh ++;
+                else break;
+            }
+        }
+    }
+    if(consecutive_bk >= 2) heuristic += 50*consecutive_bk*(-1);
+    if(consecutive_wh >= 2) heuristic += 50*consecutive_wh;
+
+    consecutive_bk = 0;
+    consecutive_wh = 0;
+    // 可在棋盤邊col上連線 下到上
+    for(int j = 0; j < SIZE; j = j+7){
+        for(int i = 7; i >= 0; i --){
+            if(!cur.board[0][j])
+                break;
+            if(consecutive_bk == 0 && consecutive_wh == 0){
+                prev_color = cur.board[i][j]==1 ; 
+                if(prev_color) consecutive_bk++;
+                else consecutive_wh++;
+            }
+            else{
+                if(prev_color && cur.board[i][j]==1)
+                    consecutive_bk ++;
+                else if( !prev_color && cur.board[i][j]==2)
+                    consecutive_wh ++;
+                else break;
+            }
+        }
+    }
+    if(consecutive_bk >= 2) heuristic += 50*consecutive_bk*(-1);
+    if(consecutive_wh >= 2) heuristic += 50*consecutive_wh;
+
+    return heuristic;
 }
 
-/*
-// black: minimizing, colored
-// white: maximizing, un-colored
-int minmax(Point pos, int depth, bool player){
+
+// black: minimizer, colored
+// white: maximizer, un-colored
+int minmax(OthelloBoard cur, int depth, bool colored){
     if(depth == 0){
 
     }
-}*/
+}
 
 void write_valid_spot(std::ofstream& fout) {
     //int n_valid_spots = next_valid_spots.size();
@@ -60,16 +162,16 @@ void write_valid_spot(std::ofstream& fout) {
     
     // ===================================
     // find good moves here
-    // i'm black, colored, minimizer
-    int nowmin = INT16_MAX;
-    bool person = player==1;
+    // note that black=1 =colored =minimizer
     Point p;
-    for(auto i:next_valid_spots){
-        if( verify_type(i,person) < nowmin ){
-            nowmin = verify_type(i,person);
-            p = i;
-        }
-    }
+
+    // starting to build root 
+    // first build root state
+    OthelloBoard cur(board);
+    cur.cur_player = player;
+    Node* root;
+    root->state = cur;
+    
     // ===================================
 
     // Remember to flush the output to ensure the last action is written to file.

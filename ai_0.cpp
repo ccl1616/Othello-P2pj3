@@ -51,14 +51,25 @@ void write_valid_spot(std::ofstream& fout) {
     
     // ===================================
     // find good moves here
-    // i'm black, colored, minimizer
-    int nowmin = INT16_MAX;
+    // note that black=1 =colored =minimizer
+    int nowmin = INT16_MAX; 
+    int nowmax = INT16_MIN;
     bool person = player==1;
     Point p;
-    for(auto i:next_valid_spots){
-        if( verify_type(i,person) < nowmin ){
-            nowmin = verify_type(i,person);
-            p = i;
+    if(person){
+        for(auto i:next_valid_spots){
+            if( verify_type(i,person) < nowmin ){
+                nowmin = verify_type(i,person);
+                p = i;
+            }
+        }
+    }
+    else{
+        for(auto i:next_valid_spots){
+            if( verify_type(i,person) > nowmax ){
+                nowmax = verify_type(i,person);
+                p = i;
+            }
         }
     }
     // ===================================
