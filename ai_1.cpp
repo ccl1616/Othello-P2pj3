@@ -258,83 +258,60 @@ int heuristic(myOthello cur){
     int heuristic = 0;
     int bk = 0, wh = 0;
 
-    // corners: 500
+    // corners: 3000
+    const int weight_corners = 3000;
     for(auto i:corners){
         if( cur.board[i.x][i.y] == 1)
             bk ++;
         else if(cur.board[i.x][i.y] == 2)
             wh ++;
     }
-    heuristic += 500*(bk-wh);
+    heuristic += weight_corners*(bk-wh);
 
-    // x-squares: 200
+    // x-squares: 900
+    const int weight_x = 900;
     for(int i = 0; i < 4; i ++){
         Point CO = corners[i];
         Point X = x_spots[i];
         if( !cur.board[X.x][X.y] && cur.board[X.x][X.y]!= cur.board[CO.x][CO.y] ){
             if(cur.board[X.x][X.y] == 1)
-                heuristic -= 200;
-            else heuristic += 200;
+                heuristic -= weight_x;
+            else heuristic += weight_x;
         }
     }
 
-    // c-squares: 100
+    // c-squares: 1000
+    const int weight_c = 1000;
     for(int i = 0; i < 4; i ++){
         Point CO = corners[i];
         for(int j = 0; j < 2; j ++){
-            Point C = c_spots[ 2*i+j ];
+            Point C = c_spots[2*i+j];
             if( !cur.board[C.x][C.y] && cur.board[C.x][C.y] != cur.board[CO.x][CO.y] ){
                 if(cur.board[C.x][C.y] == 1)
-                    heuristic -= 100;
-                else heuristic += 100;
+                    heuristic -= weight_c;
+                else heuristic += weight_c;
             }
             else if( !cur.board[C.x][C.y] && cur.board[C.x][C.y] == cur.board[CO.x][CO.y] ){
                 if(cur.board[C.x][C.y] == 1)
-                    heuristic += 100;
-                else heuristic -= 100;
+                    heuristic += weight_c;
+                else heuristic -= weight_c;
             }
         }
     }
 
-    // 角 連邊: 300
-    int bk_linecount = 0;
-    int wh_linecount = 0;
-    for(int i = 0; i < 4; i ++){
-        /*
-        Point(0, 0), Point(0,7), Point(7,0),Point(7,7)
-
-        Point(1, 0), Point(0,1),
-        Point(-1, 0), Point(0,1),
-        Point(1, 0), Point(0,-1),
-        Point(-1,0), Point(0,-1)
-        */
-        int color;
-        Point c = corners[i];
-        if(!cur.board[c.x][c.y]) continue;
-        else color = cur.board[c.x][c.y];
-        for(int j = 0; j < 2; j ++){
-            Point next = c + dir[2*i+j];
-            while(cur.board[next.x][next.y] == color && on_board(next)){
-                if(color == 1) bk_linecount++;
-                else wh_linecount++;
-                next = next + dir[2*i+j];
-            }
-        }
-    }
-    heuristic += 300*(bk_linecount-wh_linecount);
-
-    // Mobility: 50
+    // Mobility: 30
+    const int weight_mobility = 30;
     if(maximizer)
-        heuristic += 50* cur.next_valid_spots.size();
-    else heuristic += -50* cur.next_valid_spots.size();
+        heuristic += weight_mobility* cur.next_valid_spots.size();
+    else heuristic += -weight_mobility* cur.next_valid_spots.size();
 
-    // total num: 500 
-    heuristic += 500*(cur.BLACK-cur.WHITE);
+    // total num: 200 
+    const int weight_total = 200;
+    heuristic += weight_total*(cur.BLACK-cur.WHITE);
 
     cur.heuristic = heuristic;
     return heuristic;
 }
-
 int minimax(myOthello curnode, int depth){
     bool maximizer = curnode.cur_player==1;
 
