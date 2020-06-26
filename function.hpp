@@ -274,7 +274,7 @@ public:
             ss << ", (" << p.x << "," << p.y << ")";
         }
         ss << "}\n";
-        ss << "=================\n";
+        //ss << "=================\n";
         return ss.str();
     }
     std::string encode_state() {
