@@ -10,7 +10,7 @@ using namespace std;
 
 int player;
 const int SIZE = 8;
-const int MaxDepth = 7;
+const int MaxDepth = 6;
 std::array<std::array<int, SIZE>, SIZE> board;
 std::vector<Point> next_valid_spots;
 std::array<Point, 4> corners{{
@@ -58,7 +58,7 @@ class myOthello{
         bool done;
         int winner;
         int heuristic;
-        int next_x,next_y;
+        //int next_x,next_y;
 
     private:
         int get_next_player(int player) const {
@@ -423,7 +423,7 @@ void write_valid_spot(std::ofstream& fout) {
     }
     // ===================================
     // Remember to flush the output to ensure the last action is written to file.
-    if(!searched) cout << "no searched\n";
+    //if(!searched) p = next_valid_spots[index];
     fout << p.x << " " << p.y << std::endl;
     fout.flush();
 }
