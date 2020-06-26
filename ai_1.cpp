@@ -10,7 +10,8 @@ using namespace std;
 
 int player;
 const int SIZE = 8;
-std::array<std::array<int, SIZE>, SIZE> board; // 此時的棋盤樣貌
+const int MaxDepth = 5;
+std::array<std::array<int, SIZE>, SIZE> board;
 std::vector<Point> next_valid_spots;
 std::array<Point, 4> corners{{
         Point(0, 0), Point(0,7), Point(7,0),Point(7,7)
@@ -241,9 +242,10 @@ void read_valid_spots(std::ifstream& fin) {
 }
 
 int heuristic(myOthello cur){
-    bool maximizer = cur.cur_player==2;
+    bool maximizer = cur.cur_player==1;
     int heuristic = 0;
     int bk = 0, wh = 0;
+
     // corners
     for(auto i:corners){
         if( cur.board[i.x][i.y] == 1)
@@ -251,14 +253,44 @@ int heuristic(myOthello cur){
         else if(cur.board[i.x][i.y] == 2)
             wh ++;
     }
-    if(maximizer)
-        heuristic += 100*(bk-wh)/ (bk+wh+1);
-    else heuristic += -100*(wh-bk)/ (bk+wh+1);
+    heuristic += 500*(bk-wh);
 
-    // next steps
+    bk = 0, wh = 0;
+    // x-squares
+    for(int i = 0; i < 4; i ++){
+        Point CO = corners[i];
+        Point X = x_spots[i];
+        if( !cur.board[X.x][X.y] && cur.board[X.x][X.y]!= cur.board[CO.x][CO.y] ){
+            if(cur.board[X.x][X.y] == 1)
+                heuristic -= 200;
+            else heuristic += 200;
+        }
+    }
+    // c-squares
+    for(int i = 0; i < 4; i ++){
+        Point CO = corners[i];
+        for(int j = 0; j < 2; j ++){
+            Point C = c_spots[ 2*i+j ];
+            if( !cur.board[C.x][C.y] && cur.board[C.x][C.y] != cur.board[CO.x][CO.y] ){
+                if(cur.board[C.x][C.y] == 1)
+                    heuristic -= 100;
+                else heuristic += 100;
+            }
+            else if( !cur.board[C.x][C.y] && cur.board[C.x][C.y] == cur.board[CO.x][CO.y] ){
+                if(cur.board[C.x][C.y] == 1)
+                    heuristic += 100;
+                else heuristic -= 100;
+            }
+        }
+    }
+
+    // Mobility
     if(maximizer)
         heuristic += 50* cur.next_valid_spots.size();
     else heuristic += -50* cur.next_valid_spots.size();
+
+    // total num
+    heuristic += 500*(cur.BLACK-cur.WHITE);
 
     cur.heuristic = heuristic;
     return heuristic;
@@ -282,14 +314,9 @@ int minimax(myOthello curnode, int depth){
             else{
                 int eval = minimax( next,depth-1); 
                 maxeval = max(maxeval,eval);
-                if(maxeval == eval && depth == 5) 
-                    ans = i;
-                if(depth == 5)
+                
+                if(depth == MaxDepth)
                     h_map.insert(pair<int,Point>(eval,i));
-                if(depth == 5 && maxeval == eval){
-                    curnode.next_x = i.x;
-                    curnode.next_y = i.y;
-                }
             }
         }
         curnode.heuristic = maxeval;
@@ -307,14 +334,9 @@ int minimax(myOthello curnode, int depth){
             else{
                 int eval = minimax( next,depth-1);
                 mineval = min(mineval,eval);
-                if(mineval == eval && depth == 5) 
-                    ans = i;
-                if(depth == 5)
+                
+                if(depth == MaxDepth)
                     h_map.insert(pair<int,Point>(eval,i));
-                if(depth == 5 && mineval == eval){
-                    curnode.next_x = i.x;
-                    curnode.next_y = i.y;
-                }
             }
         }
         curnode.heuristic = mineval;
@@ -324,9 +346,11 @@ int minimax(myOthello curnode, int depth){
 } // end function
 
 void write_valid_spot(std::ofstream& fout) {
-    
+    int n_valid_spots = next_valid_spots.size();
+    // Choose random spot. (Not random uniform here)
+    int index = (rand() % n_valid_spots);
+    Point p = next_valid_spots[index];
     srand(time(NULL));
-    Point p;
     // ===================================
     // find good moves here
     // black =1  =maximizer
@@ -334,7 +358,7 @@ void write_valid_spot(std::ofstream& fout) {
     cur.set(board);
     cur.cur_player = player;
     cur.next_valid_spots = next_valid_spots;
-    cur.heuristic = minimax(cur,5);
+    cur.heuristic = minimax(cur,MaxDepth);
     
     for(auto i:h_map){
         //cout << "map: " << i.second.x << "," << i.second.y << endl;
@@ -344,10 +368,7 @@ void write_valid_spot(std::ofstream& fout) {
             break;
         }
     }
-    //cout << "size: " << h_map.size() << endl;
     // ===================================
-    
-    //cout << "p: "  << p.x << "," << p.y << endl;
     // Remember to flush the output to ensure the last action is written to file.
     fout << p.x << " " << p.y << std::endl;
     fout.flush();

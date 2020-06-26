@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
             if (!(fin >> y)) break;
             p.x = x; p.y = y;
         }
-        std::cout << "output: "<< p.x << "," << p.y << std::endl;
+        //std::cout << "output: "<< p.x << "," << p.y << std::endl;
         fin.close();
         // Reset action file
         if (remove(file_action.c_str()) != 0)
