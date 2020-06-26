@@ -312,6 +312,7 @@ int heuristic(myOthello cur){
     cur.heuristic = heuristic;
     return heuristic;
 }
+
 int minimax(myOthello curnode, int depth, int alpha, int beta){
     bool maximizer = curnode.cur_player==1;
 
@@ -371,9 +372,11 @@ void write_valid_spot(std::ofstream& fout) {
     bool searched = false;
     int n_valid_spots = next_valid_spots.size();
     // Choose random spot. (Not random uniform here)
+    srand(time(NULL));
     int index = (rand() % n_valid_spots);
     Point p = next_valid_spots[index];
-    srand(time(NULL));
+    fout << p.x << " " << p.y << std::endl;
+    fout.flush();
     // ===================================
     // find good moves here
     // black =1  =maximizer

@@ -10,7 +10,9 @@ using namespace std;
 
 int player;
 const int SIZE = 8;
-const int MaxDepth = 6;
+int MaxDepth = 5;
+#define MAXDEPTH 5
+
 std::array<std::array<int, SIZE>, SIZE> board;
 std::vector<Point> next_valid_spots;
 std::array<Point, 4> corners{{
@@ -397,12 +399,11 @@ int abprune(myOthello curnode, int depth, int alpha, int beta){
 } // end function
 
 void write_valid_spot(std::ofstream& fout) {
-    bool searched = false;
-    int n_valid_spots = next_valid_spots.size();
-    // Choose random spot. (Not random uniform here)
-    int index = (rand() % n_valid_spots);
-    Point p = next_valid_spots[index];
+    
     srand(time(NULL));
+    Point p = next_valid_spots[0];
+    fout << p.x << " " << p.y << std::endl;
+    fout.flush();
     // ===================================
     // find good moves here
     // black =1  =maximizer
@@ -410,17 +411,17 @@ void write_valid_spot(std::ofstream& fout) {
     cur.set(board);
     cur.cur_player = player;
     cur.next_valid_spots = next_valid_spots;
+    MaxDepth = 5;
     cur.heuristic = abprune(cur,MaxDepth, INT32_MIN, INT32_MAX);
     
     for(auto i:h_map){
-        //cout << "map: " << i.second.x << "," << i.second.y << endl;
         if(i.first == cur.heuristic){
             p.x = i.second.x;
             p.y = i.second.y;
-            searched = true;
             break;
         }
     }
+    
     // ===================================
     // Remember to flush the output to ensure the last action is written to file.
     //if(!searched) p = next_valid_spots[index];
