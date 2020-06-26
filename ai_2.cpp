@@ -10,7 +10,7 @@ using namespace std;
 
 int player;
 const int SIZE = 8;
-const int MaxDepth = 5;
+const int MaxDepth = 7;
 std::array<std::array<int, SIZE>, SIZE> board;
 std::vector<Point> next_valid_spots;
 std::array<Point, 4> corners{{

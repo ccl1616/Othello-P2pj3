@@ -312,7 +312,7 @@ int heuristic(myOthello cur){
     cur.heuristic = heuristic;
     return heuristic;
 }
-int minimax(myOthello curnode, int depth){
+int minimax(myOthello curnode, int depth, int alpha, int beta){
     bool maximizer = curnode.cur_player==1;
 
     if(depth == 0 || curnode.done){
@@ -320,7 +320,7 @@ int minimax(myOthello curnode, int depth){
     }
     
     if(maximizer){
-        int maxeval = INT16_MIN;
+        int maxeval = INT32_MIN;
         for(auto i:curnode.next_valid_spots){
             myOthello next = curnode;
             if(!next.put_disc(i)){
@@ -328,11 +328,14 @@ int minimax(myOthello curnode, int depth){
                 continue;
             }
             else{
-                int eval = minimax( next,depth-1); 
+                int eval = minimax( next,depth-1,alpha,beta); 
                 maxeval = max(maxeval,eval);
-                
                 if(depth == MaxDepth)
                     h_map.insert(pair<int,Point>(eval,i));
+
+                alpha = max(alpha,eval);
+                if(beta <= alpha)
+                    break;
             }
         }
         curnode.heuristic = maxeval;
@@ -340,7 +343,7 @@ int minimax(myOthello curnode, int depth){
     }
 
     else{
-        int mineval = INT16_MAX;
+        int mineval = INT32_MAX;
         for(auto i:curnode.next_valid_spots){
             myOthello next = curnode;
             if(!next.put_disc(i)){
@@ -348,11 +351,14 @@ int minimax(myOthello curnode, int depth){
                 continue;
             }
             else{
-                int eval = minimax( next,depth-1);
+                int eval = minimax( next,depth-1,alpha,beta);
                 mineval = min(mineval,eval);
-                
                 if(depth == MaxDepth)
                     h_map.insert(pair<int,Point>(eval,i));
+
+                beta = min(beta,eval);
+                if(beta <= alpha) 
+                    break;
             }
         }
         curnode.heuristic = mineval;
@@ -375,7 +381,7 @@ void write_valid_spot(std::ofstream& fout) {
     cur.set(board);
     cur.cur_player = player;
     cur.next_valid_spots = next_valid_spots;
-    cur.heuristic = minimax(cur,MaxDepth);
+    cur.heuristic = minimax(cur,MaxDepth, INT32_MIN, INT32_MAX);
     
     for(auto i:h_map){
         //cout << "map: " << i.second.x << "," << i.second.y << endl;
