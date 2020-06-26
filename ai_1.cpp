@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdlib>
 #include <ctime>
+#include <map>
 #include "function.hpp"
 using namespace std;
 
@@ -25,6 +26,7 @@ std::array<Point, 4> x_spots{{
     }
 };
 Point ans(0,0);
+map<int,Point> h_map;
 
 class myOthello{
     public:
@@ -47,7 +49,7 @@ class myOthello{
         bool done;
         int winner;
         int heuristic;
-        int level;
+        int next_x,next_y;
 
     private:
         int get_next_player(int player) const {
@@ -273,37 +275,46 @@ int minimax(myOthello curnode, int depth){
         int maxeval = INT16_MIN;
         for(auto i:curnode.next_valid_spots){
             myOthello next = curnode;
-            next.level = curnode.level++;
             if(!next.put_disc(i)){
-                cout << "minimax-maximizer put_disc error\n";
-                return -1;
+                cout << "hi\n";
+                continue;
             }
             else{
-                next.cur_player = 3-next.cur_player;
                 int eval = minimax( next,depth-1); 
                 maxeval = max(maxeval,eval);
-                if(maxeval == eval)
+                if(maxeval == eval && depth == 5) 
                     ans = i;
+                if(depth == 5)
+                    h_map.insert(pair<int,Point>(eval,i));
+                if(depth == 5 && maxeval == eval){
+                    curnode.next_x = i.x;
+                    curnode.next_y = i.y;
+                }
             }
         }
         curnode.heuristic = maxeval;
         return maxeval;
     }
+
     else{
         int mineval = INT16_MAX;
         for(auto i:curnode.next_valid_spots){
             myOthello next = curnode;
-            next.level = curnode.level++;
             if(!next.put_disc(i)){
-                cout << "minimax-minimizer put_disc error\n";
-                return -1;
+                cout << "hi\n";
+                continue;
             }
             else{
-                next.cur_player = 3-next.cur_player;
                 int eval = minimax( next,depth-1);
                 mineval = min(mineval,eval);
-                if(mineval == eval)
+                if(mineval == eval && depth == 5) 
                     ans = i;
+                if(depth == 5)
+                    h_map.insert(pair<int,Point>(eval,i));
+                if(depth == 5 && mineval == eval){
+                    curnode.next_x = i.x;
+                    curnode.next_y = i.y;
+                }
             }
         }
         curnode.heuristic = mineval;
@@ -313,28 +324,30 @@ int minimax(myOthello curnode, int depth){
 } // end function
 
 void write_valid_spot(std::ofstream& fout) {
-    //int n_valid_spots = next_valid_spots.size();
+    
     srand(time(NULL));
     Point p;
     // ===================================
     // find good moves here
-    // black =1 =colored =maximizer
-    // starting to build root 
+    // black =1  =maximizer
     myOthello cur;
     cur.set(board);
     cur.cur_player = player;
     cur.next_valid_spots = next_valid_spots;
-    cur.level = 0;
-
-    cur.heuristic = minimax(cur,10);
-    /*
-    for(auto i:cur.next_valid_spots)
-        cout << i.x << "," << i.y << endl;*/
+    cur.heuristic = minimax(cur,5);
     
-    p.x = ans.x;
-    p.y = ans.y;
+    for(auto i:h_map){
+        //cout << "map: " << i.second.x << "," << i.second.y << endl;
+        if(i.first == cur.heuristic){
+            p.x = i.second.x;
+            p.y = i.second.y;
+            break;
+        }
+    }
+    //cout << "size: " << h_map.size() << endl;
     // ===================================
- 
+    
+    //cout << "p: "  << p.x << "," << p.y << endl;
     // Remember to flush the output to ensure the last action is written to file.
     fout << p.x << " " << p.y << std::endl;
     fout.flush();
