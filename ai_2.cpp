@@ -335,7 +335,7 @@ int heuristic(myOthello cur){
     return heuristic;
 }
 
-int minimax(myOthello curnode, int depth){
+int abprune(myOthello curnode, int depth){
     bool maximizer = curnode.cur_player==1;
 
     if(depth == 0 || curnode.done){
@@ -351,7 +351,7 @@ int minimax(myOthello curnode, int depth){
                 continue;
             }
             else{
-                int eval = minimax( next,depth-1); 
+                int eval = abprune( next,depth-1); 
                 maxeval = max(maxeval,eval);
                 
                 if(depth == MaxDepth)
@@ -371,7 +371,7 @@ int minimax(myOthello curnode, int depth){
                 continue;
             }
             else{
-                int eval = minimax( next,depth-1);
+                int eval = abprune( next,depth-1);
                 mineval = min(mineval,eval);
                 
                 if(depth == MaxDepth)
@@ -398,7 +398,7 @@ void write_valid_spot(std::ofstream& fout) {
     cur.set(board);
     cur.cur_player = player;
     cur.next_valid_spots = next_valid_spots;
-    cur.heuristic = minimax(cur,MaxDepth);
+    cur.heuristic = abprune(cur,MaxDepth);
     
     for(auto i:h_map){
         //cout << "map: " << i.second.x << "," << i.second.y << endl;
