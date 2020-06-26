@@ -45,8 +45,7 @@ public:
     int cur_player;
     bool done;
     int winner;
-    int heuristic;
-    bool choosen;
+    
 private:
     int get_next_player(int player) const {
         return 3 - player;
@@ -125,8 +124,6 @@ public:
         next_valid_spots = rhs.get_valid_spots();
         done = false;
         winner = -1;
-        heuristic = rhs.heuristic;
-        choosen = rhs.choosen;
         return *this;
     }// end function
 
@@ -145,8 +142,6 @@ public:
         next_valid_spots = get_valid_spots();
         done = false;
         winner = -1;
-        heuristic = 0;
-        choosen = false;
     }
 
 
@@ -165,8 +160,6 @@ public:
         next_valid_spots = get_valid_spots();
         done = false;
         winner = -1;
-        heuristic = 0;
-        choosen = false;
     }
 
     // kinnda useless
