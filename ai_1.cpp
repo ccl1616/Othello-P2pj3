@@ -15,7 +15,16 @@ std::array<Point, 4> corners{{
         Point(0, 0), Point(0,7), Point(7,0),Point(7,7)
     }
 };
-Point ans(-2,-2);
+std::array<Point, 8> c_spots{{
+        Point(0, 1), Point(1,0), Point(0,6),Point(1,7),
+        Point(6, 0), Point(7,1), Point(7,6),Point(6,7)
+    }
+};
+std::array<Point, 4> x_spots{{
+        Point(1, 1), Point(1,6), Point(6,1),Point(6,6)
+    }
+};
+Point ans(0,0);
 
 class myOthello{
     public:
@@ -38,6 +47,7 @@ class myOthello{
         bool done;
         int winner;
         int heuristic;
+        int level;
 
     private:
         int get_next_player(int player) const {
@@ -52,6 +62,8 @@ class myOthello{
         void set_disc(Point p, int disc) {
             board[p.x][p.y] = disc;
         }
+        
+        // neighbor spot should exist a enemy
         bool is_disc_at(Point p, int disc) const {
             if (!is_spot_on_board(p))
                 return false;
@@ -59,9 +71,12 @@ class myOthello{
                 return false;
             return true;
         }
+        // valid to put my disk or not
         bool is_spot_valid(Point center) const {
-            if (get_disc(center) != EMPTY)
+            if (get_disc(center) != EMPTY){
+                cout << "surprisingly not empty\n";
                 return false;
+            }
             for (Point dir: directions) {
                 // Move along the direction while testing.
                 Point p = center + dir;
@@ -174,34 +189,34 @@ class myOthello{
         }
         
         bool put_disc(Point p) {
-        if(!is_spot_valid(p)) {
-            winner = get_next_player(cur_player);
-            done = true;
-            return false;
-        }
-        set_disc(p, cur_player);
-        disc_count[cur_player]++;
-        disc_count[EMPTY]--;
-        flip_discs(p);
-        // Give control to the other player.
-        cur_player = get_next_player(cur_player);
-        next_valid_spots = get_valid_spots();
-        // Check Win
-        if (next_valid_spots.size() == 0) {
+            if(!is_spot_valid(p)) {
+                winner = get_next_player(cur_player);
+                done = true;
+                return false;
+            }
+            set_disc(p, cur_player);
+            disc_count[cur_player]++;
+            disc_count[EMPTY]--;
+            flip_discs(p);
+            // Give control to the other player.
             cur_player = get_next_player(cur_player);
             next_valid_spots = get_valid_spots();
+            // Check Win
             if (next_valid_spots.size() == 0) {
-                // Game ends
-                done = true;
-                int white_discs = disc_count[WHITE];
-                int black_discs = disc_count[BLACK];
-                if (white_discs == black_discs) winner = EMPTY;
-                else if (black_discs > white_discs) winner = BLACK;
-                else winner = WHITE;
+                cur_player = get_next_player(cur_player);
+                next_valid_spots = get_valid_spots();
+                if (next_valid_spots.size() == 0) {
+                    // Game ends
+                    done = true;
+                    int white_discs = disc_count[WHITE];
+                    int black_discs = disc_count[BLACK];
+                    if (white_discs == black_discs) winner = EMPTY;
+                    else if (black_discs > white_discs) winner = BLACK;
+                    else winner = WHITE;
+                }
             }
+            return true;
         }
-        return true;
-    }
 };
 
 void read_board(std::ifstream& fin) {
@@ -224,119 +239,26 @@ void read_valid_spots(std::ifstream& fin) {
 }
 
 int heuristic(myOthello cur){
-    bool maximizer = cur.cur_player==1;
+    bool maximizer = cur.cur_player==2;
     int heuristic = 0;
     int bk = 0, wh = 0;
+    // corners
     for(auto i:corners){
         if( cur.board[i.x][i.y] == 1)
             bk ++;
-        else if(cur.board[i.x][i.y] == 2) 
+        else if(cur.board[i.x][i.y] == 2)
             wh ++;
     }
     if(maximizer)
         heuristic += 100*(bk-wh)/ (bk+wh+1);
     else heuristic += -100*(wh-bk)/ (bk+wh+1);
 
-    /*
-    // 連線
-    bool prev_color = true;
-    int consecutive_bk = 0;
-    int consecutive_wh = 0;
-    // 可在棋盤邊row上連線 左到右
-    for(int i = 0; i < SIZE; i = i+7){
-        for(int j = 0; j < SIZE; j ++){
-            if(!cur.board[i][0])
-                break;
-            if(consecutive_bk == 0 && consecutive_wh == 0){
-                prev_color = cur.board[i][j]==1 ; 
-                if(prev_color) consecutive_bk++;
-                else consecutive_wh++;
-            }
-            else{
-                if(prev_color && cur.board[i][j]==1)
-                    consecutive_bk ++;
-                else if( !prev_color && cur.board[i][j]==2)
-                    consecutive_wh ++;
-                else break;
-            }
-        }
-    }
-    if(consecutive_bk >= 2) heuristic += 50*consecutive_bk*(-1);
-    if(consecutive_wh >= 2) heuristic += 50*consecutive_wh;
+    // next steps
+    if(maximizer)
+        heuristic += 50* cur.next_valid_spots.size();
+    else heuristic += -50* cur.next_valid_spots.size();
 
-    // 右到左
-    consecutive_bk = 0;
-    consecutive_wh = 0;
-    for(int i = 0; i < SIZE; i = i+7){
-        for(int j = 7; j >= 0; j --){
-            if(!cur.board[i][j])
-                break;
-            if(consecutive_bk == 0 && consecutive_wh == 0){
-                prev_color = cur.board[i][j]==1 ; 
-                if(prev_color) consecutive_bk++;
-                else consecutive_wh++;
-            }
-            else{
-                if(prev_color && cur.board[i][j]==1)
-                    consecutive_bk ++;
-                else if( !prev_color && cur.board[i][j]==2)
-                    consecutive_wh ++;
-                else break;
-            }
-        }
-    }
-    if(consecutive_bk >= 2) heuristic += 50*consecutive_bk*(-1);
-    if(consecutive_wh >= 2) heuristic += 50*consecutive_wh;
-
-    consecutive_bk = 0;
-    consecutive_wh = 0;
-    // 可在棋盤邊col上連線 上到下
-    for(int j = 0; j < SIZE; j = j+7){
-        for(int i = 0; i < SIZE; i ++){
-            if(!cur.board[0][j])
-                break;
-            if(consecutive_bk == 0 && consecutive_wh == 0){
-                prev_color = cur.board[i][j]==1 ; 
-                if(prev_color) consecutive_bk++;
-                else consecutive_wh++;
-            }
-            else{
-                if(prev_color && cur.board[i][j]==1)
-                    consecutive_bk ++;
-                else if( !prev_color && cur.board[i][j]==2)
-                    consecutive_wh ++;
-                else break;
-            }
-        }
-    }
-    if(consecutive_bk >= 2) heuristic += 50*consecutive_bk*(-1);
-    if(consecutive_wh >= 2) heuristic += 50*consecutive_wh;
-
-    consecutive_bk = 0;
-    consecutive_wh = 0;
-    // 可在棋盤邊col上連線 下到上
-    for(int j = 0; j < SIZE; j = j+7){
-        for(int i = 7; i >= 0; i --){
-            if(!cur.board[0][j])
-                break;
-            if(consecutive_bk == 0 && consecutive_wh == 0){
-                prev_color = cur.board[i][j]==1 ; 
-                if(prev_color) consecutive_bk++;
-                else consecutive_wh++;
-            }
-            else{
-                if(prev_color && cur.board[i][j]==1)
-                    consecutive_bk ++;
-                else if( !prev_color && cur.board[i][j]==2)
-                    consecutive_wh ++;
-                else break;
-            }
-        }
-    }
-    if(consecutive_bk >= 2) heuristic += 50*consecutive_bk*(-1);
-    if(consecutive_wh >= 2) heuristic += 50*consecutive_wh;
-    */
-
+    cur.heuristic = heuristic;
     return heuristic;
 }
 
@@ -344,21 +266,20 @@ int minimax(myOthello curnode, int depth){
     bool maximizer = curnode.cur_player==1;
 
     if(depth == 0 || curnode.done){
-        // return static evaluation of position
-        curnode.heuristic = heuristic(curnode);
-        return curnode.heuristic;
+        return heuristic(curnode);
     }
     
     if(maximizer){
         int maxeval = INT16_MIN;
         for(auto i:curnode.next_valid_spots){
             myOthello next = curnode;
-            next.cur_player = 3-curnode.cur_player;
+            next.level = curnode.level++;
             if(!next.put_disc(i)){
                 cout << "minimax-maximizer put_disc error\n";
                 return -1;
             }
             else{
+                next.cur_player = 3-next.cur_player;
                 int eval = minimax( next,depth-1); 
                 maxeval = max(maxeval,eval);
                 if(maxeval == eval)
@@ -372,12 +293,13 @@ int minimax(myOthello curnode, int depth){
         int mineval = INT16_MAX;
         for(auto i:curnode.next_valid_spots){
             myOthello next = curnode;
-            next.cur_player = 3-curnode.cur_player;
+            next.level = curnode.level++;
             if(!next.put_disc(i)){
                 cout << "minimax-minimizer put_disc error\n";
                 return -1;
             }
             else{
+                next.cur_player = 3-next.cur_player;
                 int eval = minimax( next,depth-1);
                 mineval = min(mineval,eval);
                 if(mineval == eval)
@@ -402,14 +324,15 @@ void write_valid_spot(std::ofstream& fout) {
     cur.set(board);
     cur.cur_player = player;
     cur.next_valid_spots = next_valid_spots;
+    cur.level = 0;
+
     cur.heuristic = minimax(cur,10);
+    /*
+    for(auto i:cur.next_valid_spots)
+        cout << i.x << "," << i.y << endl;*/
     
-    if(ans.x == -1 && ans.y == -1)
-        cout << "non-use tree search\n";
-    else {
-        p.x = ans.x;
-        p.y = ans.y;
-    }
+    p.x = ans.x;
+    p.y = ans.y;
     // ===================================
  
     // Remember to flush the output to ensure the last action is written to file.
