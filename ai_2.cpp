@@ -10,7 +10,7 @@ using namespace std;
 
 int player;
 const int SIZE = 8;
-int MaxDepth = 6;
+int MaxDepth = 5;
 
 std::array<std::array<int, SIZE>, SIZE> board;
 std::vector<Point> next_valid_spots;

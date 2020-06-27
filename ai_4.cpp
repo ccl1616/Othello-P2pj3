@@ -10,7 +10,7 @@ using namespace std;
 
 int player;
 const int SIZE = 8;
-int MaxDepth = 6;
+int MaxDepth = 7;
 
 std::array<std::array<int, SIZE>, SIZE> board;
 std::vector<Point> next_valid_spots;
@@ -269,21 +269,18 @@ bool on_board(Point p){
 int count_corners(myOthello cur){
     int bk = 0, wh = 0;
 
-    // corners
-    const int weight_corners = 100;
     for(auto i:corners){
         if( cur.board[i.x][i.y] == 1)
             bk ++;
         else if(cur.board[i.x][i.y] == 2)
             wh ++;
     }
-    return weight_corners*(bk-wh);
+    return (bk-wh);
 }
 
 int count_line(myOthello cur){
 
     // 角 連邊
-    const int weight_line = 90;
     int bk_linecount = 0;
     int wh_linecount = 0;
     for(int i = 0; i < 4; i ++){
@@ -308,27 +305,17 @@ int count_line(myOthello cur){
             }
         }
     }
-    return weight_line*(bk_linecount-wh_linecount);
+    return (bk_linecount-wh_linecount);
 }
 
-int count_mobility(myOthello cur,int player){
-    bool maximizer = player==1;
-
+int count_mobility(myOthello cur){
+    bool maximizer = cur.cur_player==1;
+    
     // Mobility
-    myOthello temp = cur;
-    temp.cur_player = 3-temp.cur_player;
-    temp.next_valid_spots = temp.get_valid_spots();
-    
+    //const int weight_mobility = 30;
     if(maximizer)
-    return cur.next_valid_spots.size()-temp.next_valid_spots.size();
-    else return -1* ( cur.next_valid_spots.size()-temp.next_valid_spots.size() );
-}
-
-int count_potentialmobility(myOthello cur){
-    int my_potential = count_mobility(cur,cur.cur_player);
-    int opp_potential = count_mobility(cur,3-cur.cur_player);
-    
-    return my_potential-opp_potential;
+        return cur.next_valid_spots.size();
+    else return -1* cur.next_valid_spots.size();
 }
 
 int count_totalnum(myOthello cur){
@@ -357,22 +344,20 @@ int heuristic(myOthello cur){
         // opening game
         heuristic = 10000*count_corners(cur)
                     + 20*count_weight(cur)
-                    + 50*count_mobility(cur,cur.cur_player)
-                    + 50*count_potentialmobility(cur);
+                    + 50*count_mobility(cur);
     }
     else if(cur.disc_count[0] >= 6){
         // middle game
         heuristic = 10000*count_corners(cur)
                     + 10*count_weight(cur)
-                    + 10*count_line(cur)
-                    + 20*count_mobility(cur,cur.cur_player)
-                    + 20*count_potentialmobility(cur)
+                    + 100*count_line(cur)
+                    + 20*count_mobility(cur)
                     + 20*count_totalnum(cur);
     }
     else{
         // end game
         heuristic = 10000*count_corners(cur)
-                    + 20*count_line(cur)
+                    + 200*count_line(cur)
                     + 30*count_totalnum(cur);
     }
 
@@ -382,7 +367,7 @@ int heuristic(myOthello cur){
 
 int abprune(myOthello curnode, int depth, int alpha, int beta){
     bool maximizer = curnode.cur_player==1;
-
+    
     if(depth == 0 || curnode.done){
         return heuristic(curnode);
     }
@@ -400,7 +385,7 @@ int abprune(myOthello curnode, int depth, int alpha, int beta){
                 maxeval = max(maxeval,eval);
                 if(depth == MaxDepth)
                     h_map.insert(pair<int,Point>(eval,i));
-
+                
                 alpha = max(alpha,eval);
                 if(beta <= alpha)
                     break;
@@ -423,7 +408,7 @@ int abprune(myOthello curnode, int depth, int alpha, int beta){
                 mineval = min(mineval,eval);
                 if(depth == MaxDepth)
                     h_map.insert(pair<int,Point>(eval,i));
-
+                
                 beta = min(beta,eval);
                 if(beta <= alpha) 
                     break;
@@ -449,8 +434,9 @@ void write_valid_spot(std::ofstream& fout) {
     if(cur.disc_count[0] != 64-4){
         cur.cur_player = player;
         cur.next_valid_spots = next_valid_spots;
+
+        MaxDepth = 1;
         cur.heuristic = abprune(cur,MaxDepth, INT32_MIN, INT32_MAX);
-        
         for(auto i:h_map){
             if(i.first == cur.heuristic){
                 p.x = i.second.x;
@@ -458,6 +444,21 @@ void write_valid_spot(std::ofstream& fout) {
                 break;
             }
         }
+        h_map.clear();
+        fout << p.x << " " << p.y << std::endl;
+        fout.flush();
+
+        MaxDepth = 7;
+        cur.heuristic = abprune(cur,MaxDepth, INT32_MIN, INT32_MAX); 
+        for(auto i:h_map){
+            if(i.first == cur.heuristic){
+                p.x = i.second.x;
+                p.y = i.second.y;
+                break;
+            }
+        }      
+        fout << p.x << " " << p.y << std::endl;
+        fout.flush();
     }
     // ===================================
     // Remember to flush the output to ensure the last action is written to file.

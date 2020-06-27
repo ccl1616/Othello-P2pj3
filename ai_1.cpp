@@ -307,7 +307,7 @@ int heuristic(myOthello cur){
 
     // total num: 2000 
     const int weight_total = 2000;
-    heuristic += weight_total*(cur.BLACK-cur.WHITE);
+    heuristic += weight_total*(cur.disc_count[1]-cur.disc_count[2]);
 
     cur.heuristic = heuristic;
     return heuristic;
