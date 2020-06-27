@@ -29,8 +29,8 @@ std::array<Point, 4> x_spots{{
 };
 std::array<Point, 8> dir{{
         Point(1, 0), Point(0,1),
-        Point(-1, 0), Point(0,1),
         Point(1, 0), Point(0,-1),
+        Point(-1, 0), Point(0,1),
         Point(-1,0), Point(0,-1)
     }
 };

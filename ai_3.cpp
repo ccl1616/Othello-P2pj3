@@ -29,8 +29,8 @@ std::array<Point, 4> x_spots{{
 };
 std::array<Point, 8> dir{{
         Point(1, 0), Point(0,1),
-        Point(-1, 0), Point(0,1),
         Point(1, 0), Point(0,-1),
+        Point(-1, 0), Point(0,1),
         Point(-1,0), Point(0,-1)
     }
 };
@@ -284,14 +284,7 @@ int count_line(myOthello cur){
     int bk_linecount = 0;
     int wh_linecount = 0;
     for(int i = 0; i < 4; i ++){
-        /*
-        Point(0, 0), Point(0,7), Point(7,0),Point(7,7)
 
-        Point(1, 0), Point(0,1),
-        Point(-1, 0), Point(0,1),
-        Point(1, 0), Point(0,-1),
-        Point(-1,0), Point(0,-1)
-        */
         int color;
         Point c = corners[i];
         if(!cur.board[c.x][c.y]) continue;
@@ -335,7 +328,7 @@ int count_weight(myOthello cur){
     }
     return heuristic;
 }
-// end fundtions
+// end functions
 
 int heuristic(myOthello cur){
     int heuristic = 0;
@@ -460,6 +453,7 @@ void write_valid_spot(std::ofstream& fout) {
         }      
         fout << p.x << " " << p.y << std::endl;
         fout.flush();
+        
     }
     // ===================================
     // Remember to flush the output to ensure the last action is written to file.
