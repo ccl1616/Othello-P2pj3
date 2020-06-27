@@ -313,12 +313,22 @@ int count_line(myOthello cur){
 
 int count_mobility(myOthello cur,int player){
     bool maximizer = player==1;
-    
+
     // Mobility
-    //const int weight_mobility = 30;
+    myOthello temp = cur;
+    temp.cur_player = 3-temp.cur_player;
+    temp.next_valid_spots = temp.get_valid_spots();
+    
     if(maximizer)
-        return cur.next_valid_spots.size();
-    else return -1* cur.next_valid_spots.size();
+    return cur.next_valid_spots.size()-temp.next_valid_spots.size();
+    else return -1* ( cur.next_valid_spots.size()-temp.next_valid_spots.size() );
+}
+
+int count_potentialmobility(myOthello cur){
+    int my_potential = count_mobility(cur,cur.cur_player);
+    int opp_potential = count_mobility(cur,3-cur.cur_player);
+    
+    return my_potential-opp_potential;
 }
 
 int count_totalnum(myOthello cur){
@@ -347,7 +357,8 @@ int heuristic(myOthello cur){
         // opening game
         heuristic = 10000*count_corners(cur)
                     + 20*count_weight(cur)
-                    + 50*count_mobility(cur,cur.cur_player);
+                    + 50*count_mobility(cur,cur.cur_player)
+                    + 50*count_potentialmobility(cur);
     }
     else if(cur.disc_count[0] >= 6){
         // middle game
@@ -355,6 +366,7 @@ int heuristic(myOthello cur){
                     + 10*count_weight(cur)
                     + 10*count_line(cur)
                     + 20*count_mobility(cur,cur.cur_player)
+                    + 20*count_potentialmobility(cur)
                     + 20*count_totalnum(cur);
     }
     else{
@@ -388,7 +400,7 @@ int abprune(myOthello curnode, int depth, int alpha, int beta){
                 maxeval = max(maxeval,eval);
                 if(depth == MaxDepth)
                     h_map.insert(pair<int,Point>(eval,i));
-                
+
                 alpha = max(alpha,eval);
                 if(beta <= alpha)
                     break;
@@ -411,7 +423,7 @@ int abprune(myOthello curnode, int depth, int alpha, int beta){
                 mineval = min(mineval,eval);
                 if(depth == MaxDepth)
                     h_map.insert(pair<int,Point>(eval,i));
-                
+
                 beta = min(beta,eval);
                 if(beta <= alpha) 
                     break;
@@ -446,8 +458,6 @@ void write_valid_spot(std::ofstream& fout) {
                 break;
             }
         }
-        fout << p.x << " " << p.y << std::endl;
-        fout.flush();
     }
     // ===================================
     // Remember to flush the output to ensure the last action is written to file.
