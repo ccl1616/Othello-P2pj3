@@ -305,8 +305,8 @@ int heuristic(myOthello cur){
         heuristic += weight_mobility* cur.next_valid_spots.size();
     else heuristic += -weight_mobility* cur.next_valid_spots.size();
 
-    // total num: 200 
-    const int weight_total = 200;
+    // total num: 2000 
+    const int weight_total = 2000;
     heuristic += weight_total*(cur.BLACK-cur.WHITE);
 
     cur.heuristic = heuristic;
@@ -369,7 +369,6 @@ int minimax(myOthello curnode, int depth, int alpha, int beta){
 } // end function
 
 void write_valid_spot(std::ofstream& fout) {
-    bool searched = false;
     int n_valid_spots = next_valid_spots.size();
     // Choose random spot. (Not random uniform here)
     srand(time(NULL));
@@ -391,13 +390,11 @@ void write_valid_spot(std::ofstream& fout) {
         if(i.first == cur.heuristic){
             p.x = i.second.x;
             p.y = i.second.y;
-            searched = true;
             break;
         }
     }
     // ===================================
     // Remember to flush the output to ensure the last action is written to file.
-    if(!searched) cout << "no searched\n";
     fout << p.x << " " << p.y << std::endl;
     fout.flush();
 }
