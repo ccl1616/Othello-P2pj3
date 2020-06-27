@@ -431,10 +431,11 @@ void write_valid_spot(std::ofstream& fout) {
     // black =1  =maximizer
     myOthello cur;
     cur.set(board);
+    
     if(cur.disc_count[0] != 64-4){
         cur.cur_player = player;
         cur.next_valid_spots = next_valid_spots;
-
+        
         MaxDepth = 1;
         cur.heuristic = abprune(cur,MaxDepth, INT32_MIN, INT32_MAX);
         for(auto i:h_map){
@@ -448,7 +449,7 @@ void write_valid_spot(std::ofstream& fout) {
         fout << p.x << " " << p.y << std::endl;
         fout.flush();
 
-        MaxDepth = 7;
+        MaxDepth = 9;
         cur.heuristic = abprune(cur,MaxDepth, INT32_MIN, INT32_MAX); 
         for(auto i:h_map){
             if(i.first == cur.heuristic){
