@@ -11,7 +11,6 @@ using namespace std;
 int player;
 const int SIZE = 8;
 int MaxDepth = 6;
-#define MAXDEPTH 5
 
 std::array<std::array<int, SIZE>, SIZE> board;
 std::vector<Point> next_valid_spots;
@@ -33,6 +32,17 @@ std::array<Point, 8> dir{{
         Point(-1, 0), Point(0,1),
         Point(1, 0), Point(0,-1),
         Point(-1,0), Point(0,-1)
+    }
+};
+std::array<array<int,8>, 8> weightmap{{
+        {200, -100, 100,  50,  50, 100, -100,  200},
+        {-100, -200, -50, -50, -50, -50, -200, -100},
+        {100,  -50, 100,   0,   0, 100,  -50,  100},
+        {50,  -50,   0,   0,   0,   0,  -50,   50},
+        {50,  -50,   0,   0,   0,   0,  -50,   50},
+        {100,  -50, 100,   0,   0, 100,  -50,  100},
+        {-100, -200, -50, -50, -50, -50, -200, -100},
+        {200, -100, 100,  50,  50, 100, -100,  200},
     }
 };
 
@@ -255,54 +265,25 @@ bool on_board(Point p){
     return 0 <= p.x && p.x < SIZE && 0 <= p.y && p.y < SIZE;
 }
 
-int heuristic(myOthello cur){
-    bool maximizer = cur.cur_player==1;
-    int heuristic = 0;
+//heuristic little functions
+int count_corners(myOthello cur){
     int bk = 0, wh = 0;
 
-    // corners: 3000
-    const int weight_corners = 3000;
+    // corners
+    const int weight_corners = 100;
     for(auto i:corners){
         if( cur.board[i.x][i.y] == 1)
             bk ++;
         else if(cur.board[i.x][i.y] == 2)
             wh ++;
     }
-    heuristic += weight_corners*(bk-wh);
+    return weight_corners*(bk-wh);
+}
 
-    // x-squares: 900
-    const int weight_x = 900;
-    for(int i = 0; i < 4; i ++){
-        Point CO = corners[i];
-        Point X = x_spots[i];
-        if( !cur.board[X.x][X.y] && cur.board[X.x][X.y]!= cur.board[CO.x][CO.y] ){
-            if(cur.board[X.x][X.y] == 1)
-                heuristic -= weight_x;
-            else heuristic += weight_x;
-        }
-    }
+int count_line(myOthello cur){
 
-    // c-squares: 1000
-    const int weight_c = 1000;
-    for(int i = 0; i < 4; i ++){
-        Point CO = corners[i];
-        for(int j = 0; j < 2; j ++){
-            Point C = c_spots[2*i+j];
-            if( !cur.board[C.x][C.y] && cur.board[C.x][C.y] != cur.board[CO.x][CO.y] ){
-                if(cur.board[C.x][C.y] == 1)
-                    heuristic -= weight_c;
-                else heuristic += weight_c;
-            }
-            else if( !cur.board[C.x][C.y] && cur.board[C.x][C.y] == cur.board[CO.x][CO.y] ){
-                if(cur.board[C.x][C.y] == 1)
-                    heuristic += weight_c;
-                else heuristic -= weight_c;
-            }
-        }
-    }
-
-    // 角 連邊: 900
-    const int weight_line = 900;
+    // 角 連邊
+    const int weight_line = 90;
     int bk_linecount = 0;
     int wh_linecount = 0;
     for(int i = 0; i < 4; i ++){
@@ -327,17 +308,61 @@ int heuristic(myOthello cur){
             }
         }
     }
-    heuristic += weight_line*(bk_linecount-wh_linecount);
+    return weight_line*(bk_linecount-wh_linecount);
+}
 
-    // Mobility: 30
-    const int weight_mobility = 30;
+int count_mobility(myOthello cur){
+    bool maximizer = cur.cur_player==1;
+    
+    // Mobility
+    //const int weight_mobility = 30;
     if(maximizer)
-        heuristic += weight_mobility* cur.next_valid_spots.size();
-    else heuristic += -weight_mobility* cur.next_valid_spots.size();
+        return cur.next_valid_spots.size();
+    else return -1* cur.next_valid_spots.size();
+}
 
-    // total num: 2000 
-    const int weight_total = 2000;
-    heuristic += weight_total*(cur.BLACK-cur.WHITE);
+int count_totalnum(myOthello cur){
+    // total num 
+    return (cur.disc_count[1]-cur.disc_count[2]);
+}
+
+int count_weight(myOthello cur){
+    int heuristic = 0;
+    for(int i = 0; i < 8; i ++){
+        for(int j = 0; j < 8; j ++){
+            if(!cur.board[i][j]) continue;
+            if(cur.board[i][j] == 1)
+                heuristic += weightmap[i][j];
+            else heuristic -= weightmap[i][j];
+        }
+    }
+    return heuristic;
+}
+// end fundtions
+
+int heuristic(myOthello cur){
+    int heuristic = 0;
+    
+    if(cur.disc_count[0] >= 44){
+        // opening game
+        heuristic = 10000*count_corners(cur)
+                    + 20*count_weight(cur)
+                    + 50*count_mobility(cur);
+    }
+    else if(cur.disc_count[0] >= 6){
+        // middle game
+        heuristic = 10000*count_corners(cur)
+                    + 10*count_weight(cur)
+                    + 10*count_line(cur)
+                    + 20*count_mobility(cur)
+                    + 20*count_totalnum(cur);
+    }
+    else{
+        // end game
+        heuristic = 10000*count_corners(cur)
+                    + 20*count_line(cur)
+                    + 30*count_totalnum(cur);
+    }
 
     cur.heuristic = heuristic;
     return heuristic;
@@ -409,19 +434,19 @@ void write_valid_spot(std::ofstream& fout) {
     // black =1  =maximizer
     myOthello cur;
     cur.set(board);
-    cur.cur_player = player;
-    cur.next_valid_spots = next_valid_spots;
-    MaxDepth = 5;
-    cur.heuristic = abprune(cur,MaxDepth, INT32_MIN, INT32_MAX);
-    
-    for(auto i:h_map){
-        if(i.first == cur.heuristic){
-            p.x = i.second.x;
-            p.y = i.second.y;
-            break;
+    if(cur.disc_count[0] != 64-4){
+        cur.cur_player = player;
+        cur.next_valid_spots = next_valid_spots;
+        cur.heuristic = abprune(cur,MaxDepth, INT32_MIN, INT32_MAX);
+        
+        for(auto i:h_map){
+            if(i.first == cur.heuristic){
+                p.x = i.second.x;
+                p.y = i.second.y;
+                break;
+            }
         }
     }
-    
     // ===================================
     // Remember to flush the output to ensure the last action is written to file.
     fout << p.x << " " << p.y << std::endl;

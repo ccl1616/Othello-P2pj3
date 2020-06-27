@@ -11,7 +11,6 @@ using namespace std;
 int player;
 const int SIZE = 8;
 int MaxDepth = 6;
-#define MAXDEPTH 5
 
 std::array<std::array<int, SIZE>, SIZE> board;
 std::vector<Point> next_valid_spots;
@@ -293,11 +292,6 @@ int heuristic(myOthello cur){
                     heuristic -= weight_c;
                 else heuristic += weight_c;
             }
-            else if( !cur.board[C.x][C.y] && cur.board[C.x][C.y] == cur.board[CO.x][CO.y] ){
-                if(cur.board[C.x][C.y] == 1)
-                    heuristic += weight_c;
-                else heuristic -= weight_c;
-            }
         }
     }
 
@@ -335,9 +329,9 @@ int heuristic(myOthello cur){
         heuristic += weight_mobility* cur.next_valid_spots.size();
     else heuristic += -weight_mobility* cur.next_valid_spots.size();
 
-    // total num: 2000 
+    // total num 
     const int weight_total = 2000;
-    heuristic += weight_total*(cur.BLACK-cur.WHITE);
+    heuristic += weight_total*(cur.disc_count[1]-cur.disc_count[2]);
 
     cur.heuristic = heuristic;
     return heuristic;
@@ -409,19 +403,19 @@ void write_valid_spot(std::ofstream& fout) {
     // black =1  =maximizer
     myOthello cur;
     cur.set(board);
-    cur.cur_player = player;
-    cur.next_valid_spots = next_valid_spots;
-    MaxDepth = 5;
-    cur.heuristic = abprune(cur,MaxDepth, INT32_MIN, INT32_MAX);
-    
-    for(auto i:h_map){
-        if(i.first == cur.heuristic){
-            p.x = i.second.x;
-            p.y = i.second.y;
-            break;
+    if(cur.disc_count[0] != 64-4){
+        cur.cur_player = player;
+        cur.next_valid_spots = next_valid_spots;
+        cur.heuristic = abprune(cur,MaxDepth, INT32_MIN, INT32_MAX);
+        
+        for(auto i:h_map){
+            if(i.first == cur.heuristic){
+                p.x = i.second.x;
+                p.y = i.second.y;
+                break;
+            }
         }
     }
-    
     // ===================================
     // Remember to flush the output to ensure the last action is written to file.
     fout << p.x << " " << p.y << std::endl;
