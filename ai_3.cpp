@@ -5,12 +5,31 @@
 #include <cstdlib>
 #include <ctime>
 #include <map>
-#include "function.hpp"
+
 using namespace std;
 
 int player;
 const int SIZE = 8;
 int MaxDepth = 7;
+
+struct Point {
+    int x, y;
+	Point() : Point(0, 0) {}
+
+	Point(float x, float y) : x(x), y(y) {}
+	bool operator==(const Point& rhs) const {
+		return x == rhs.x && y == rhs.y;
+	}
+	bool operator!=(const Point& rhs) const {
+		return !operator==(rhs);
+	}
+	Point operator+(const Point& rhs) const {
+		return Point(x + rhs.x, y + rhs.y);
+	}
+	Point operator-(const Point& rhs) const {
+		return Point(x - rhs.x, y - rhs.y);
+	}
+};
 
 std::array<std::array<int, SIZE>, SIZE> board;
 std::vector<Point> next_valid_spots;
@@ -351,7 +370,7 @@ int heuristic(myOthello cur){
         // end game
         heuristic = 10000*count_corners(cur)
                     + 200*count_line(cur)
-                    + 30*count_totalnum(cur);
+                    + 100*count_totalnum(cur);
     }
 
     cur.heuristic = heuristic;
@@ -442,7 +461,7 @@ void write_valid_spot(std::ofstream& fout) {
         fout << p.x << " " << p.y << std::endl;
         fout.flush();
 
-        MaxDepth = 8;
+        MaxDepth = 7;
         cur.heuristic = abprune(cur,MaxDepth, INT32_MIN, INT32_MAX); 
         for(auto i:h_map){
             if(i.first == cur.heuristic){

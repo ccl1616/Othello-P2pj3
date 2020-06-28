@@ -5,12 +5,31 @@
 #include <cstdlib>
 #include <ctime>
 #include <map>
-#include "function.hpp"
+
 using namespace std;
 
 int player;
 const int SIZE = 8;
 int MaxDepth = 7;
+
+struct Point {
+    int x, y;
+	Point() : Point(0, 0) {}
+
+	Point(float x, float y) : x(x), y(y) {}
+	bool operator==(const Point& rhs) const {
+		return x == rhs.x && y == rhs.y;
+	}
+	bool operator!=(const Point& rhs) const {
+		return !operator==(rhs);
+	}
+	Point operator+(const Point& rhs) const {
+		return Point(x + rhs.x, y + rhs.y);
+	}
+	Point operator-(const Point& rhs) const {
+		return Point(x - rhs.x, y - rhs.y);
+	}
+};
 
 std::array<std::array<int, SIZE>, SIZE> board;
 std::vector<Point> next_valid_spots;
@@ -385,14 +404,14 @@ int heuristic(myOthello cur){
     if(cur.disc_count[0] >= 44){
         // opening game
         heuristic = 10000*count_corners(cur)
-                    + 100*count_stability(cur)
+                    + 10000*count_stability(cur)
                     + 20*count_weight(cur)
                     + 50*count_mobility(cur);
     }
     else if(cur.disc_count[0] >= 6){
         // middle game
         heuristic = 10000*count_corners(cur)
-                    + 1000*count_stability(cur)
+                    + 10000*count_stability(cur)
                     + 10*count_weight(cur)
                     + 100*count_line(cur)
                     + 20*count_mobility(cur)
@@ -401,9 +420,9 @@ int heuristic(myOthello cur){
     else{
         // end game
         heuristic = 10000*count_corners(cur)
-                    + 1000*count_stability(cur)
+                    + 10000*count_stability(cur)
                     + 200*count_line(cur)
-                    + 30*count_totalnum(cur);
+                    + 100*count_totalnum(cur);
     }
 
     cur.heuristic = heuristic;
