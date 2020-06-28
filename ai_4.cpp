@@ -60,19 +60,14 @@ std::array<Point, 4> dir_stability{{
         Point(1,-1)
     }
 };
-std::array<array<int,8>, 8> weightmap{{
-        {200, -100, 100,  50,  50, 100, -100,  200},
-        {-100, -200, -50, -50, -50, -50, -200, -100},
-        {100,  -50, 100,   0,   0, 100,  -50,  100},
-        {50,  -50,   0,   0,   0,   0,  -50,   50},
-        {50,  -50,   0,   0,   0,   0,  -50,   50},
-        {100,  -50, 100,   0,   0, 100,  -50,  100},
-        {-100, -200, -50, -50, -50, -50, -200, -100},
-        {200, -100, 100,  50,  50, 100, -100,  200},
+std::array<Point, 4> center{{
+        Point(3,3), 
+        Point(3,4),
+        Point(4,3), 
+        Point(4,4)
     }
 };
 
-Point ans(0,0);
 map<int,Point> h_map;
 
 class myOthello{
@@ -324,6 +319,7 @@ int count_line(myOthello cur){
             }
         }
     }
+
     return (bk_linecount-wh_linecount);
 }
 
@@ -344,12 +340,29 @@ int count_totalnum(myOthello cur){
 
 int count_weight(myOthello cur){
     int heuristic = 0;
-    for(int i = 0; i < 8; i ++){
-        for(int j = 0; j < 8; j ++){
-            if(!cur.board[i][j]) continue;
-            if(cur.board[i][j] == 1)
-                heuristic += weightmap[i][j];
-            else heuristic -= weightmap[i][j];
+    // x-squares: 50
+    const int weight_x = 50;
+    for(int i = 0; i < 4; i ++){
+        Point CO = corners[i];
+        Point X = x_spots[i];
+        if( !cur.board[X.x][X.y] && cur.board[X.x][X.y]!= cur.board[CO.x][CO.y] ){
+            if(cur.board[X.x][X.y] == 1)
+                heuristic -= weight_x;
+            else heuristic += weight_x;
+        }
+    }
+
+    // c-squares: 10
+    const int weight_c = 10;
+    for(int i = 0; i < 4; i ++){
+        Point CO = corners[i];
+        for(int j = 0; j < 2; j ++){
+            Point C = c_spots[2*i+j];
+            if( !cur.board[C.x][C.y] && cur.board[C.x][C.y] != cur.board[CO.x][CO.y] ){
+                if(cur.board[C.x][C.y] == 1)
+                    heuristic -= weight_c;
+                else heuristic += weight_c;
+            }
         }
     }
     return heuristic;
@@ -396,33 +409,49 @@ int count_stability(myOthello cur){
     return heuristic;
 }
 
+// ignore this
+int count_square(myOthello cur){
+    int color = 0;
+    Point p = center[0];
+    if(!cur.board[p.x][p.y]) return 0;
+    else{
+        color = cur.board[p.x][p.y];
+        for(int i = 1; i < 4; i ++){
+            p = center[i];
+            if(cur.board[p.x][p.y] != color)
+                return 0;
+        }
+        return 1;
+    }
+    return 1;
+}
 // end functions
 
 int heuristic(myOthello cur){
     int heuristic = 0;
-    
     if(cur.disc_count[0] >= 44){
         // opening game
         heuristic = 10000*count_corners(cur)
-                    + 10000*count_stability(cur)
+                    // + 100*count_stability(cur)
+                    // + 0*count_line(cur)
                     + 20*count_weight(cur)
-                    + 50*count_mobility(cur);
+                    + 100*count_mobility(cur);
     }
+
     else if(cur.disc_count[0] >= 6){
-        // middle game
         heuristic = 10000*count_corners(cur)
-                    + 10000*count_stability(cur)
-                    + 10*count_weight(cur)
+                    + 500*count_stability(cur)
                     + 100*count_line(cur)
-                    + 20*count_mobility(cur)
-                    + 20*count_totalnum(cur);
+                    + 10*count_weight(cur)
+                    + 200*count_mobility(cur);
     }
     else{
         // end game
         heuristic = 10000*count_corners(cur)
-                    + 10000*count_stability(cur)
-                    + 200*count_line(cur)
-                    + 100*count_totalnum(cur);
+                    + 1000*count_stability(cur)
+                    + 500*count_line(cur)
+                    //+ 10*count_weight(cur)
+                    + 300*count_mobility(cur);
     }
 
     cur.heuristic = heuristic;
@@ -513,7 +542,20 @@ void write_valid_spot(std::ofstream& fout) {
         fout << p.x << " " << p.y << std::endl;
         fout.flush();
 
-        MaxDepth = 8;
+        MaxDepth = 3;
+        cur.heuristic = abprune(cur,MaxDepth, INT32_MIN, INT32_MAX);
+        for(auto i:h_map){
+            if(i.first == cur.heuristic){
+                p.x = i.second.x;
+                p.y = i.second.y;
+                break;
+            }
+        }
+        h_map.clear();
+        fout << p.x << " " << p.y << std::endl;
+        fout.flush();
+
+        MaxDepth = 9;
         cur.heuristic = abprune(cur,MaxDepth, INT32_MIN, INT32_MAX); 
         for(auto i:h_map){
             if(i.first == cur.heuristic){

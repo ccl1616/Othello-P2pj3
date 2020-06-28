@@ -337,12 +337,29 @@ int count_totalnum(myOthello cur){
 
 int count_weight(myOthello cur){
     int heuristic = 0;
-    for(int i = 0; i < 8; i ++){
-        for(int j = 0; j < 8; j ++){
-            if(!cur.board[i][j]) continue;
-            if(cur.board[i][j] == 1)
-                heuristic += weightmap[i][j];
-            else heuristic -= weightmap[i][j];
+    // x-squares: 50
+    const int weight_x = 50;
+    for(int i = 0; i < 4; i ++){
+        Point CO = corners[i];
+        Point X = x_spots[i];
+        if( !cur.board[X.x][X.y] && cur.board[X.x][X.y]!= cur.board[CO.x][CO.y] ){
+            if(cur.board[X.x][X.y] == 1)
+                heuristic -= weight_x;
+            else heuristic += weight_x;
+        }
+    }
+
+    // c-squares: 10
+    const int weight_c = 10;
+    for(int i = 0; i < 4; i ++){
+        Point CO = corners[i];
+        for(int j = 0; j < 2; j ++){
+            Point C = c_spots[2*i+j];
+            if( !cur.board[C.x][C.y] && cur.board[C.x][C.y] != cur.board[CO.x][CO.y] ){
+                if(cur.board[C.x][C.y] == 1)
+                    heuristic -= weight_c;
+                else heuristic += weight_c;
+            }
         }
     }
     return heuristic;
@@ -356,21 +373,22 @@ int heuristic(myOthello cur){
         // opening game
         heuristic = 10000*count_corners(cur)
                     + 20*count_weight(cur)
-                    + 50*count_mobility(cur);
+                    + 500*count_mobility(cur);
+                    //- 20*count_totalnum(cur);
     }
     else if(cur.disc_count[0] >= 6){
         // middle game
         heuristic = 10000*count_corners(cur)
                     + 10*count_weight(cur)
                     + 100*count_line(cur)
-                    + 20*count_mobility(cur)
-                    + 20*count_totalnum(cur);
+                    + 1000*count_mobility(cur);
+                    //- 40*count_totalnum(cur);
     }
     else{
         // end game
         heuristic = 10000*count_corners(cur)
-                    + 200*count_line(cur)
-                    + 100*count_totalnum(cur);
+                    + 200*count_line(cur);
+                    //+ 100*count_totalnum(cur);
     }
 
     cur.heuristic = heuristic;
@@ -461,7 +479,7 @@ void write_valid_spot(std::ofstream& fout) {
         fout << p.x << " " << p.y << std::endl;
         fout.flush();
 
-        MaxDepth = 7;
+        MaxDepth = 5;
         cur.heuristic = abprune(cur,MaxDepth, INT32_MIN, INT32_MAX); 
         for(auto i:h_map){
             if(i.first == cur.heuristic){
