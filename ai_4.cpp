@@ -416,26 +416,26 @@ int heuristic(myOthello cur){
     if(cur.disc_count[0] >= 44){
         // opening game
         heuristic = 10000*count_corners(cur)
-                    // + 100*count_stability(cur)
-                    // + 0*count_line(cur)
+                    + 10000*count_stability(cur)
+                    + 1000*count_line(cur)
                     + 20*count_weight(cur)
-                    + 100*count_mobility(cur);
+                    + 5*count_mobility(cur);
     }
 
     else if(cur.disc_count[0] >= 6){
         heuristic = 10000*count_corners(cur)
-                    + 500*count_stability(cur)
-                    + 100*count_line(cur)
+                    + 10000*count_stability(cur)
+                    + 1000*count_line(cur)
                     + 10*count_weight(cur)
-                    + 200*count_mobility(cur);
+                    + 2*count_mobility(cur);
     }
     else{
         // end game
         heuristic = 10000*count_corners(cur)
-                    + 1000*count_stability(cur)
-                    + 500*count_line(cur)
+                    + 10000*count_stability(cur)
+                    + 1000*count_line(cur);
                     //+ 10*count_weight(cur)
-                    + 300*count_mobility(cur);
+                    //+ 300*count_mobility(cur);
     }
 
     cur.heuristic = heuristic;

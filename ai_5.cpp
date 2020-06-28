@@ -436,14 +436,7 @@ int count_stability(myOthello cur){
 
 int heuristic(myOthello cur){
     int heuristic = 0;
-    if(cur.done){
-        heuristic = 10000*count_corners(cur)
-                    + 10000*count_stability(cur)
-                    + 1000*count_line(cur)
-                    + 500*count_totalnum(cur);
-                    //+ 300*count_mobility(cur);
-    }
-    else if(cur.disc_count[0] >= 44){
+    if(cur.disc_count[0] >= 44){
         // opening game
         heuristic = 10000*count_corners(cur)
                     + 10000*count_stability(cur)
