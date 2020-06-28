@@ -10,8 +10,6 @@ using namespace std;
 
 int player;
 const int SIZE = 8;
-int MaxDepth = 7;
-
 struct Point {
     int x, y;
 	Point() : Point(0, 0) {}
@@ -31,6 +29,7 @@ struct Point {
 	}
 };
 
+int MaxDepth = 7;
 std::array<std::array<int, SIZE>, SIZE> board;
 std::vector<Point> next_valid_spots;
 std::array<Point, 4> corners{{
@@ -344,39 +343,9 @@ int count_mobility(myOthello cur){
     else return -1* cur.next_valid_spots.size();
 }
 
-int count_totalnum(myOthello cur){
-    // total num 
-    return (cur.disc_count[1]-cur.disc_count[2]);
-}
-
 int count_weight(myOthello cur){
     int heuristic = 0;
-    // x-squares: 50
-    const int weight_x = 50;
-    for(int i = 0; i < 4; i ++){
-        Point CO = corners[i];
-        Point X = x_spots[i];
-        if( !cur.board[X.x][X.y] && cur.board[X.x][X.y]!= cur.board[CO.x][CO.y] ){
-            if(cur.board[X.x][X.y] == 1)
-                heuristic -= weight_x;
-            else heuristic += weight_x;
-        }
-    }
-
-    // c-squares: 10
-    const int weight_c = 10;
-    for(int i = 0; i < 4; i ++){
-        Point CO = corners[i];
-        for(int j = 0; j < 2; j ++){
-            Point C = c_spots[2*i+j];
-            if( !cur.board[C.x][C.y] && cur.board[C.x][C.y] != cur.board[CO.x][CO.y] ){
-                if(cur.board[C.x][C.y] == 1)
-                    heuristic -= weight_c;
-                else heuristic += weight_c;
-            }
-        }
-    }
-
+    
     int bk = 0;
     int wh = 0;
     for(int i = 0; i < 8; i ++){
@@ -388,6 +357,39 @@ int count_weight(myOthello cur){
         }
     }
     heuristic += (bk-wh)*10;
+    return heuristic;
+}
+
+int count_xc(myOthello cur){
+    int heuristic = 0;
+    int bk = 0;
+    int wh = 0;
+    // x-squares
+    const int weight_x = 1000;
+    for(int i = 0; i < 4; i ++){
+        Point CO = corners[i];
+        Point X = x_spots[i];
+        if( !cur.board[X.x][X.y] && cur.board[X.x][X.y]!= cur.board[CO.x][CO.y] ){
+            if(cur.board[X.x][X.y] == 1)
+                bk -= weight_x;
+            else wh += weight_x;
+        }
+    }
+
+    // c-squares
+    const int weight_c = 1000;
+    for(int i = 0; i < 4; i ++){
+        Point CO = corners[i];
+        for(int j = 0; j < 2; j ++){
+            Point C = c_spots[2*i+j];
+            if( !cur.board[C.x][C.y] && cur.board[C.x][C.y] != cur.board[CO.x][CO.y] ){
+                if(cur.board[C.x][C.y] == 1)
+                    bk -= weight_c;
+                else wh += weight_c;
+            }
+        }
+    }
+    heuristic = bk-wh;
     return heuristic;
 }
 
@@ -442,7 +444,8 @@ int heuristic(myOthello cur){
                     + 10000*count_stability(cur)
                     + 1000*count_line(cur)
                     + 20*count_weight(cur)
-                    + 5*count_mobility(cur);
+                    + 5*count_mobility(cur)
+                    + 1000*count_xc(cur);
     }
 
     else if(cur.disc_count[0] >= 6){
@@ -450,13 +453,15 @@ int heuristic(myOthello cur){
                     + 10000*count_stability(cur)
                     + 1000*count_line(cur)
                     + 10*count_weight(cur)
-                    + 2*count_mobility(cur);
+                    + 2*count_mobility(cur)
+                    + 2000*count_xc(cur);
     }
     else{
         // end game
         heuristic = 10000*count_corners(cur)
                     + 10000*count_stability(cur)
-                    + 1000*count_line(cur);
+                    + 1000*count_line(cur)
+                    + 3000*count_xc(cur);
                     //+ 10*count_weight(cur)
                     //+ 300*count_mobility(cur);
     }
@@ -471,7 +476,6 @@ int abprune(myOthello curnode, int depth, int alpha, int beta){
     if(depth == 0 || curnode.done){
         return heuristic(curnode);
     }
-    
     if(maximizer){
         int maxeval = INT32_MIN;
         for(auto i:curnode.next_valid_spots){
@@ -494,7 +498,6 @@ int abprune(myOthello curnode, int depth, int alpha, int beta){
         curnode.heuristic = maxeval;
         return maxeval;
     }
-
     else{
         int mineval = INT32_MAX;
         for(auto i:curnode.next_valid_spots){
