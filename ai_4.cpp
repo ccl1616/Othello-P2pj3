@@ -67,7 +67,7 @@ std::array<Point, 4> center{{
         Point(4,4)
     }
 };
-
+ 
 map<int,Point> h_map;
 
 class myOthello{
@@ -409,22 +409,6 @@ int count_stability(myOthello cur){
     return heuristic;
 }
 
-// ignore this
-int count_square(myOthello cur){
-    int color = 0;
-    Point p = center[0];
-    if(!cur.board[p.x][p.y]) return 0;
-    else{
-        color = cur.board[p.x][p.y];
-        for(int i = 1; i < 4; i ++){
-            p = center[i];
-            if(cur.board[p.x][p.y] != color)
-                return 0;
-        }
-        return 1;
-    }
-    return 1;
-}
 // end functions
 
 int heuristic(myOthello cur){
