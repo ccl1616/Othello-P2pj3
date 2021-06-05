@@ -1,5 +1,6 @@
 # pj3
-this is my programming class2- project3 which is about making an othello game
+this is my programming course 10802 - project3 
+this is about making an othello game
 
 template from ta: https://github.com/j3soon/OthelloAITemplate
 
